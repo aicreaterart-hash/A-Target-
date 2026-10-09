@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#10152b">
+<title>Tap the Target</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:radial-gradient(circle at top,#26376a,#10152b 60%);color:#fff;display:flex;align-items:center;justify-content:center;padding:18px}
+.game{width:min(100%,480px);text-align:center}.tag{color:#a9b9ff;font-weight:700;letter-spacing:3px;font-size:12px}.title{font-size:clamp(30px,8vw,44px);margin:8px 0}.subtitle{color:#c5cbea;margin:0 0 20px}.stats{display:flex;gap:10px;margin-bottom:14px}.stat{flex:1;background:#ffffff10;border:1px solid #ffffff22;border-radius:15px;padding:12px 6px}.label{font-size:11px;letter-spacing:1px;color:#b9c5f8}.value{font-size:27px;font-weight:800;margin-top:2px}.arena{height:min(55vh,390px);min-height:290px;position:relative;overflow:hidden;border:1px solid #7086e8;border-radius:20px;background:linear-gradient(145deg,#202b55,#151b35);box-shadow:0 15px 45px #0004;touch-action:manipulation}.message{position:absolute;inset:0;display:grid;place-content:center;padding:24px;color:#dce3ff;line-height:1.6}.target{position:absolute;width:62px;height:62px;border:0;border-radius:50%;background:radial-gradient(circle,#fff 0 17%,#ffda65 18% 35%,#ff536a 36% 68%,#b91f4d 69%);box-shadow:0 0 22px #ff536a88;cursor:pointer;touch-action:manipulation;animation:pop .12s ease-out}.target:focus-visible,.start:focus-visible{outline:3px solid white;outline-offset:3px}@keyframes pop{from{transform:scale(.6)}to{transform:scale(1)}}.start{width:100%;margin-top:14px;border:0;border-radius:14px;padding:15px;background:linear-gradient(90deg,#6c63ff,#a64dff);color:white;font-size:16px;font-weight:800;cursor:pointer;min-height:50px}.result{min-height:24px;color:#d1d8ff;font-size:14px;margin-top:12px}.instructions{color:#9eabd9;font-size:12px;margin-top:14px}
+</style>
+</head>
+<body>
+<main class="game">
+  <div class="tag">QUICK REFLEX CHALLENGE</div>
+  <h1 class="title">🎯 Tap the Target</h1>
+  <p class="subtitle">Tap as many targets as you can in 30 seconds!</p>
+  <section class="stats" aria-label="Game statistics">
+    <div class="stat"><div class="label">SCORE</div><div class="value" id="score">0</div></div>
+    <div class="stat"><div class="label">TIME</div><div class="value"><span id="time">30</span>s</div></div>
+    <div class="stat"><div class="label">BEST</div><div class="value" id="best">0</div></div>
+  </section>
+  <div class="arena" id="arena">
+    <div class="message" id="message">Ready to test your reflexes?<br>Press START GAME to begin!</div>
+  </div>
+  <button class="start" id="start" type="button">▶ START GAME</button>
+  <div class="result" id="result" aria-live="polite">Each successful tap earns 1 point.</div>
+  <div class="instructions">Made for mobile • No install needed</div>
+</main>
+<script>
+(function(){
+ const $=id=>document.getElementById(id), arena=$('arena'), scoreEl=$('score'),timeEl=$('time'),bestEl=$('best'),message=$('message'),start=$('start'),result=$('result');
+ let score=0,time=30,running=false,timer=null,target=null,best=0;
+ try{best=Number(localStorage.getItem('tapTargetBest')||0)||0}catch(e){}
+ bestEl.textContent=best;
+ function placeTarget(){
+   if(!running)return;
+   if(target)target.remove();
+   target=document.createElement('button');target.type='button';target.className='target';target.setAttribute('aria-label','Tap target');
+   const size=62,maxX=Math.max(0,arena.clientWidth-size),maxY=Math.max(0,arena.clientHeight-size);
+   target.style.left=Math.floor(Math.random()*(maxX+1))+'px';target.style.top=Math.floor(Math.random()*(maxY+1))+'px';
+   target.addEventListener('click',()=>{if(!running)return;score++;scoreEl.textContent=score;placeTarget()});
+   arena.appendChild(target);
+ }
+ function finish(){
+   running=false;clearInterval(timer);timer=null;if(target){target.remove();target=null}
+   message.innerHTML='🎉 Time is up!<br>Your score: <strong>'+score+'</strong>';message.style.display='grid';
+   start.textContent='↻ PLAY AGAIN';result.textContent=score>best?'New best score! Amazing!':'Try again and beat your best score!';
+   if(score>best){best=score;bestEl.textContent=best;try{localStorage.setItem('tapTargetBest',String(best))}catch(e){}}
+ }
+ start.addEventListener('click',()=>{
+   clearInterval(timer);if(target){target.remove();target=null}
+   score=0;time=30;running=true;scoreEl.textContent='0';timeEl.textContent='30';message.style.display='none';
+   start.textContent='🎯 PLAYING…';result.textContent='Quick! Tap the target!';
+   placeTarget();timer=setInterval(()=>{time--;timeEl.textContent=time;if(time<=0)finish()},1000);
+ });
+})();
+</script>
+</body>
+</html>
